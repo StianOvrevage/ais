@@ -3,7 +3,7 @@ package ais
 import "time"
 
 type Dynamic struct {
-	Navigation_status Navigation_status
+	Navigation_status uint8
 	Latitude          float64
 	Longitude         float64
 	Course            float32
