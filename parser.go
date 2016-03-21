@@ -13,7 +13,7 @@ type parser_item struct {
 	MMSI             uint32
 	Message_type     uint8
 	Repeat_indicator uint8
-	Binary           []byte
+	Bits             Bits_array
 	Valid            bool
 }
 
@@ -83,15 +83,15 @@ func (this *Parser) Parse(data string) (AIS, bool) {
 
 	if count_fragments == 1 || fragment_number == 1 {
 		// Message Type
-		res_bits = getBinary(bits, 0, 6)
+		res_bits = bits.GetBinary(0, 6)
 		message_type := uint8(res_bits[0])
 
 		// Repeat Indicator
-		res_bits = getBinary(bits, 6, 2)
+		res_bits = bits.GetBinary(6, 2)
 		repeat_indicator := uint8(res_bits[0])
 
 		// MMSI
-		res_bits = getBinary(bits, 8, 30)
+		res_bits = bits.GetBinary(8, 30)
 		mmsi := binary.BigEndian.Uint32(res_bits)
 
 		if count_fragments > 1 {
@@ -99,12 +99,13 @@ func (this *Parser) Parse(data string) (AIS, bool) {
 				MMSI:             mmsi,
 				Message_type:     message_type,
 				Repeat_indicator: repeat_indicator,
-				Binary:           bits,
+				Bits:             bits,
 				Valid:            this.checkCRC(data) == nil,
 			}
 
 			return AIS{}, false // сообщаем, что объект ещё не создан
 		} else {
+			println(777)
 			// одиночное сообщение
 			item_ais = this.createAIS(mmsi, split[4], message_type, repeat_indicator, this.checkCRC(data) == nil, bits)
 			return item_ais, true
@@ -118,16 +119,13 @@ func (this *Parser) Parse(data string) (AIS, bool) {
 		if fragment, ok = this.fragments[message_id]; !ok {
 			return AIS{}, true
 		}
-		//fmt.Println(bits)
 
-		fragment.Binary = append(fragment.Binary, bits...)
+		fragment.Bits = append(fragment.Bits, bits...)
 		fragment.Valid = fragment.Valid && this.checkCRC(data) == nil
-
-		//this.fragments[message_id].Binary = append(this.fragments[message_id].Binary, bits...)
 
 		// если последнее сообщение
 		if count_fragments == fragment_number {
-			item_ais = this.createAIS(fragment.MMSI, split[4], fragment.Message_type, fragment.Repeat_indicator, fragment.Valid, fragment.Binary)
+			item_ais = this.createAIS(fragment.MMSI, split[4], fragment.Message_type, fragment.Repeat_indicator, fragment.Valid, fragment.Bits)
 
 			delete(this.fragments, message_id)
 
@@ -144,7 +142,7 @@ func (this *Parser) Parse(data string) (AIS, bool) {
 /*
 	создание объекта AIS
 */
-func (this Parser) createAIS(mmsi uint32, radio_channel string, message_type, repeat_indicator uint8, valid bool, bits []byte) AIS {
+func (this Parser) createAIS(mmsi uint32, radio_channel string, message_type, repeat_indicator uint8, valid bool, bits Bits_array) AIS {
 	var item_ais AIS = AIS{
 		MMSI:          mmsi,
 		Message_type:  message_type,
@@ -160,6 +158,12 @@ func (this Parser) createAIS(mmsi uint32, radio_channel string, message_type, re
 		this.parseBaseStationReport(&item_ais, bits)
 	case 5:
 		this.parseShipAndVoyage(&item_ais, bits)
+	case 18:
+		this.parseStandarBPositionReport(&item_ais, bits)
+	case 19:
+		this.parseExtendedBPositionReport(&item_ais, bits)
+	case 24:
+		this.parseC_CSStaticDataReport(&item_ais, bits)
 	}
 
 	return item_ais
