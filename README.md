@@ -1,8 +1,10 @@
 # Golang ais
 
+### Forked from https://github.com/mil-ast/ais .
+
 Парсинг сообщений Automatic Identification System
 
-> go get github.com/mil-ast/ais
+> go get github.com/StianOvrevage/ais
 
 ### Пример
 ```go
@@ -10,7 +12,7 @@ package main
 
 import(
 	"fmt"
-	"github.com/mil-ast/ais"
+	"github.com/StianOvrevage/ais"
 )
 
 func main() {
