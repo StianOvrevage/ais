@@ -105,7 +105,7 @@ func (this *Parser) Parse(data string) (AIS, bool) {
 
 			return AIS{}, false // сообщаем, что объект ещё не создан
 		} else {
-			println(777)
+			//println(777)
 			// одиночное сообщение
 			item_ais = this.createAIS(mmsi, split[4], message_type, repeat_indicator, this.checkCRC(data) == nil, bits)
 			return item_ais, true
