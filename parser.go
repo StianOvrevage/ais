@@ -4,6 +4,7 @@ import (
 	"encoding/binary"
 	"encoding/hex"
 	"errors"
+
 	//"fmt"
 	"strconv"
 	"strings"
@@ -33,7 +34,6 @@ func GetParser() Parser {
 func (this *Parser) Parse(data string) (AIS, bool) {
 	var (
 		split []string = strings.Split(data, ",")
-		body  string   = split[5]
 		runes []rune
 		err   error
 		value uint64
@@ -45,9 +45,11 @@ func (this *Parser) Parse(data string) (AIS, bool) {
 		message_id      uint8 // идентификатор фрагментов
 	)
 
-	if len(split) < 7 {
+	if len(split) < 6 {
 		return AIS{}, true
 	}
+
+	var body string = split[5]
 
 	//count_fragments
 	value, err = strconv.ParseUint(split[1], 10, 8)
